@@ -1,7 +1,7 @@
 import requests
 import time
-import openpyxl
 import json
+import csv
 from reset_script import reset_script
 
 # Load configuration from config.json
@@ -11,17 +11,18 @@ try:
         CONSUMER_KEY = config['CONSUMER_KEY']
         CONSUMER_SECRET = config['CONSUMER_SECRET']
         SITE_URL = config['SITE_URL']
+    print('✓ Loaded configuration from config.json')
 except FileNotFoundError:
-    print("Error: config.json not found. Please create it with your WooCommerce credentials.")
+    print("❌ Error: config.json not found. Please create it with your WooCommerce credentials.")
     exit(1)
 except json.JSONDecodeError:
-    print("Error: config.json is not valid JSON. Please check the format.")
+    print("❌ Error: config.json is not valid JSON. Please check the format.")
     exit(1)
 except KeyError as e:
-    print(f"Error: Missing required key {e} in config.json")
+    print(f"❌ Error: Missing required key {e} in config.json")
     exit(1)
 
-EXCEL_FILE = "products.xlsx"
+CSV_FILE = "products.csv"
 PAGE_PROPERTY_FILE = "current_page.txt"  # File to store the current page number
 
 
@@ -33,7 +34,7 @@ def get_current_page():
     except FileNotFoundError:
         return 1
     except ValueError:
-        print("Warning: Invalid page number in current_page.txt. Starting from page 1.")
+        print("⚠️ Warning: Invalid page number in current_page.txt. Starting from page 1.")
         return 1
 
 
@@ -43,7 +44,7 @@ def save_current_page(page):
         with open(PAGE_PROPERTY_FILE, "w") as file:
             file.write(str(page))
     except IOError as e:
-        print(f"Warning: Could not save current page: {e}")
+        print(f"⚠️ Warning: Could not save current page: {e}")
 
 
 def fetch_titles(page):
@@ -62,67 +63,68 @@ def fetch_titles(page):
         products = response.json()
         return [product["name"] for product in products], len(products) == 50
     except requests.RequestException as e:
-        print(f"Error fetching data from API: {e}")
+        print(f"❌ Error fetching data from API: {e}")
         return [], False
     except (KeyError, json.JSONDecodeError) as e:
-        print(f"Error processing API response: {e}")
+        print(f"❌ Error processing API response: {e}")
         return [], False
 
 
-def write_titles_to_excel(titles):
-    """Write titles to an Excel file."""
+def write_titles_to_csv(titles):
+    """Write titles to a CSV file."""
     try:
-        try:
-            wb = openpyxl.load_workbook(EXCEL_FILE)
-        except FileNotFoundError:
-            wb = openpyxl.Workbook()
-
-        sheet = wb.active
-        last_row = sheet.max_row
-        for idx, title in enumerate(titles, start=last_row + 1):
-            sheet.cell(row=idx, column=1, value=title)
-
-        wb.save(EXCEL_FILE)
-        print(f"Successfully wrote {len(titles)} titles to {EXCEL_FILE}")
+        # Open in append mode to add new titles
+        mode = 'a' if get_current_page() > 1 else 'w'
+        with open(CSV_FILE, mode, newline='', encoding='utf-8') as f:
+            writer = csv.writer(f, quoting=csv.QUOTE_ALL)
+            # Write header if it's a new file
+            if mode == 'w':
+                writer.writerow(['Product Title'])
+            # Write titles
+            for title in titles:
+                writer.writerow([title])
+        print(f"✓ Successfully wrote {len(titles)} titles to {CSV_FILE}")
     except Exception as e:
-        print(f"Error writing to Excel file: {e}")
+        print(f"❌ Error writing to CSV file: {e}")
 
 
 def fetch_woocommerce_product_titles():
-    """Main function to fetch product titles and save them to Excel."""
-    print(f"Starting to fetch product titles from {SITE_URL}")
+    """Main function to fetch product titles and save them to CSV."""
+    print(f"\n🔄 Starting to fetch product titles from {SITE_URL}")
     current_page = get_current_page()
     total_products = 0
 
     while True:
-        print(f"Fetching page {current_page}...")
+        print(f"📥 Fetching page {current_page}...", end=' ', flush=True)
         titles, has_more = fetch_titles(current_page)
         
         if not titles:
             if current_page == 1:
-                print("No products found or error occurred.")
+                print("❌ No products found or error occurred.")
                 break
-            print("No more products to fetch.")
+            print("✓ No more products to fetch.")
             break
 
         total_products += len(titles)
-        write_titles_to_excel(titles)
+        write_titles_to_csv(titles)
         save_current_page(current_page)
 
         if not has_more:
-            print("Reached the last page.")
+            print("✓ Reached the last page.")
             break
 
         current_page += 1
         time.sleep(1)  # Add delay to avoid hitting API rate limits
 
-    print(f"Finished! Total products processed: {total_products}")
+    print(f"\n✅ Finished! Total products processed: {total_products}")
+    print(f"📁 Results saved to {CSV_FILE}")
 
 
 if __name__ == "__main__":
+    print('🚀 Starting product title import...\n')
     try:
         fetch_woocommerce_product_titles()
     except KeyboardInterrupt:
-        print("\nProcess interrupted by user. Progress has been saved.")
+        print("\n⚠️ Process interrupted by user. Progress has been saved.")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"❌ An unexpected error occurred: {e}")
