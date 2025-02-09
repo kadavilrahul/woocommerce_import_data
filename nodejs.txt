@@ -1,0 +1,143 @@
+Node.js script that uses the WooCommerce REST API to fetch all products with the specified details: title, price, image link, short description, description, and category.
+
+To use this script, you'll need the following:
+1. A WooCommerce store with REST API enabled.
+2. Your WooCommerce API `consumer_key` and `consumer_secret`.
+
+### Install Required Dependencies
+First, install the `woocommerce-rest-api` package:
+
+npm install @woocommerce/woocommerce-rest-api
+
+
+### Node.js Script
+Here’s the script:
+
+```javascript
+
+const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
+
+// Initialize WooCommerce API
+const api = new WooCommerceRestApi({
+  url: "https://yourstore.com", // Replace with your store URL
+  consumerKey: "ck_your_consumer_key", // Replace with your consumer key
+  consumerSecret: "cs_your_consumer_secret", // Replace with your consumer secret
+  version: "wc/v3" // WooCommerce API version
+});
+
+// Function to fetch all products
+async function fetchAllProducts() {
+  try {
+    let page = 1;
+    let allProducts = [];
+    let perPage = 100; // Maximum allowed by WooCommerce API
+
+    while (true) {
+      console.log(`Fetching page ${page}...`);
+      const response = await api.get("products", {
+        per_page: perPage,
+        page: page
+      });
+
+      const products = response.data;
+
+      // Map the required fields
+      const mappedProducts = products.map(product => ({
+        title: product.name,
+        price: product.price,
+        image_link: product.images.length > 0 ? product.images[0].src : null,
+        short_description: product.short_description,
+        description: product.description,
+        categories: product.categories.map(category => category.name).join(", ")
+      }));
+
+      allProducts = allProducts.concat(mappedProducts);
+
+      // Break the loop if no more products
+      if (products.length < perPage) {
+        break;
+      }
+
+      page++;
+    }
+
+    console.log("All products fetched successfully!");
+    console.log(allProducts);
+
+    // Optionally, save the data to a file
+    const fs = require("fs");
+    fs.writeFileSync("products.json", JSON.stringify(allProducts, null, 2));
+    console.log("Products saved to products.json");
+
+  } catch (error) {
+    console.error("Error fetching products:", error.response ? error.response.data : error.message);
+  }
+}
+
+// Run the function
+fetchAllProducts();
+
+```
+
+
+
+The script will:
+- Log all fetched products to the console.
+- Save the product data to a `products.json` file in the same directory.
+
+
+
+Convert json to CSV
+
+If you choose JSON, you can use libraries like `json2csv` in Node.js to convert JSON data to CSV easily:
+
+
+1. Install dependancy
+npm install json2csv
+Then, you can use the following code snippet to convert JSON to CSV:
+
+--
+
+const { parse } = require('json2csv');
+const fs = require('fs');
+
+// Read the JSON file
+try {
+    // Read products.json from the current directory
+    const jsonData = fs.readFileSync('products.json', 'utf8');
+    const products = JSON.parse(jsonData);
+
+    // Define the fields you want in your CSV
+    const fields = [
+        'title',
+        'price',
+        'image_link',
+        'short_description',
+        'description',
+        'categories'
+    ];
+
+    const opts = { fields };
+
+    // Convert to CSV
+    const csv = parse(products, opts);
+
+    // Write CSV to file
+    fs.writeFileSync('products.csv', csv);
+    console.log('Successfully converted products.json to products.csv');
+
+} catch (err) {
+    console.error('Error converting JSON to CSV:', err);
+}
+
+--
+
+
+2. Save this script as `convert.js` (or any name you prefer)
+
+3. Make sure `products.json` (created by the previous WooCommerce script) is in the same directory
+
+4. Run the script:
+
+node convert.js
+
