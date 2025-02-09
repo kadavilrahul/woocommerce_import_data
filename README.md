@@ -6,22 +6,16 @@ This project is designed to import product titles from various sources and proce
 ## Setup
 1. Clone the repository:
    ```bash
-   git clone https://github.com/kadavilrahul/import_product_titles.git
+   git clone https://github.com/kadavilrahul/import_product_titles.git && cd import_product_titles
    ```
-2. Navigate to the project directory:
+2. Run the main script to import and process product titles:
    ```bash
-   cd import_product_titles
+   python main.py
    ```
-3. Install the required dependencies:
+3. To start fresh or reset the data collection:
    ```bash
-   pip install -r requirements.txt
+   python3 -c "from reset_script import reset_script; reset_script()"
    ```
-
-## Usage
-Run the main script to import and process product titles:
-```bash
-python main.py
-```
 
 ## Contributing
 Contributions are welcome! Please follow these steps:
@@ -29,5 +23,3 @@ Contributions are welcome! Please follow these steps:
 2. Create a new branch for your feature or bugfix.
 3. Commit your changes with descriptive messages.
 4. Submit a pull request.
-
-This is Rahul's test

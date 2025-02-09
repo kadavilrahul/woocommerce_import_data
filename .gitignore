@@ -1,5 +1,4 @@
 # Ignore sensitive files
-config.py
 # Added to ignore Python cache directories
 __pycache__/
 # Ignore generated files
@@ -12,8 +11,13 @@ backups/
 # Ignore shell scripts, log files, and pid files
 *.log
 *.pid
+*.xlsx
+*.txt
 
 # Ignore specific shell script files
 setup_file_versioning.sh
 file_versioning.sh
 check_versioning.sh
+
+# Ignore configuration files with sensitive data
+config.json
