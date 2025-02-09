@@ -1,3 +1,4 @@
 # Ignore sensitive files
 config.py
+# Added to ignore Python cache directories
 __pycache__/
