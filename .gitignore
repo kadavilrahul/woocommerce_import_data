@@ -5,19 +5,19 @@ __pycache__/
 current_page.txt
 products.xlsx
 
-# Ignore backups folder
+# Ignore folder
 backups/
+node_modules/
 
-# Ignore shell scripts, log files, and pid files
+# Ignore shell scripts, log files, .json and pid files
 *.log
 *.pid
 *.xlsx
 *.txt
+*.json
+*.csv
 
 # Ignore specific shell script files
 setup_file_versioning.sh
 file_versioning.sh
 check_versioning.sh
-
-# Ignore configuration files with sensitive data
-config.json
