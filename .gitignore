@@ -5,11 +5,11 @@ __pycache__/
 # Ignore generated files
 current_page.txt
 products.xlsx
+
 # Ignore backups folder
 backups/
 
 # Ignore shell scripts, log files, and pid files
-*.sh
 *.log
 *.pid
 
