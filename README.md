@@ -9,7 +9,26 @@ This project is designed to import product titles from various sources and proce
    git clone https://github.com/kadavilrahul/import_product_titles.git && cd import_product_titles
    ```
 
-## Setup python 
+## Quick Start
+Run the interactive setup script:
+   ```bash
+   bash main.sh
+   ```
+This script will:
+1. Help you create `config.json` with your WooCommerce credentials
+2. Let you choose between Python and Node.js implementation
+3. Set up dependencies and run the selected script
+
+
+## Manual setup
+- Create a file named config.json with below contents
+{
+    "CONSUMER_KEY": "ck_XXXX",
+    "CONSUMER_SECRET": "cs_XXXX",
+    "SITE_URL": "https://example.com"
+}
+
+- Setup python 
 1. Run the main script to import and process product titles:
    ```bash
    python main.py
@@ -19,7 +38,7 @@ This project is designed to import product titles from various sources and proce
    python3 -c "from reset_script import reset_script; reset_script()"
    ```
 
-## Setup nodejs
+- Setup nodejs manually
 1. Install dependencies:
    ```bash
    npm init -y
