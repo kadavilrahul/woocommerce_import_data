@@ -2,15 +2,10 @@ import requests
 import time
 import openpyxl
 from reset_script import reset_script
-import os
 
-try:
-    from config import CONSUMER_KEY, CONSUMER_SECRET, SITE_URL
-except ImportError:
-    CONSUMER_KEY = input("Enter your WooCommerce Consumer Key: ")
-    CONSUMER_SECRET = input("Enter your WooCommerce Consumer Secret: ")
-    SITE_URL = input("Enter your WooCommerce Site URL: ")
-
+CONSUMER_KEY = "ck_8e6c79d7691c17d67b0b0aff67bc257752c54abb"
+CONSUMER_SECRET = "cs_9ee336566af22fcbe3034b2e4354572a9d6a4836"
+SITE_URL = "https://nilgiristores.in"
 EXCEL_FILE = "products.xlsx"
 PAGE_PROPERTY_FILE = "current_page.txt"  # File to store the current page number
 
