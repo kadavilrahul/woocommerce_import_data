@@ -22,7 +22,6 @@ console.log(`✓ Connected to WooCommerce API at ${config.SITE_URL}`);
 
 // Create CSV write stream
 const csvStream = fs.createWriteStream('products.csv');
-csvStream.write('Product Title\n'); // CSV header
 
 // Function to fetch all product titles
 async function fetchAllProductTitles() {
