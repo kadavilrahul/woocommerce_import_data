@@ -1,65 +1,176 @@
-# Import Product Titles
+# WooCommerce Product Data Import Tools
 
-## Overview
-This project is designed to import product titles from various sources and process them for further analysis or integration with other systems. It is tailored for Nion developers to ensure seamless integration with Nion's ecosystem.
+A collection of tools to import product data from WooCommerce stores via the REST API. This repository contains two main components:
 
+1. **Product Titles Importer** (`fetch_product_titles/`) - Fetches only product titles
+2. **Full Product Data Importer** (`fetch_product_data/`) - Fetches comprehensive product information including:
+   - Title
+   - Price
+   - Product Link
+   - Category
+   - Image URL
 
-## Clone the repository:
-   ```bash
-   git clone https://github.com/kadavilrahul/import_product_titles.git && cd import_product_titles
-   ```
+## Features
+
+### Common Features
+- Multiple implementation options (Python and Node.js)
+- Batch processing for large catalogs
+- Progress tracking and resume capability
+- Built-in error handling
+- Rate limiting protection
+- Interactive setup script
+
+### Specific Features
+- **Product Titles Importer**: Lightweight, focused on title extraction
+- **Full Product Data Importer**: Comprehensive data extraction with structured CSV output
+
+## Prerequisites
+
+- Python 3.x (for Python implementation)
+  - `requests` library
+- Node.js (for Node.js implementation)
+  - `@woocommerce/woocommerce-rest-api` package
 
 ## Quick Start
-Run the interactive setup script:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/kadavilrahul/woocommerce_import_product_data.git
+   cd woocommerce_import_product_data
+   ```
+
+2. Choose your desired tool:
+   ```bash
+   # For product titles only
+   cd fetch_product_titles
+   
+   # For full product data
+   cd fetch_product_data
+   ```
+
+3. Create Python environment (optional, recommended):
+   ```bash
+   python3 -m venv fetchvenv
+   source fetchvenv/bin/activate
+   ```
+
+4. Run the setup script:
    ```bash
    bash main.sh
    ```
-This script will:
-1. Help you create `config.json` with your WooCommerce credentials
-2. Let you choose between Python and Node.js implementation
-3. Set up dependencies and run the selected script
 
+## Configuration
 
-## Manual setup
-- Create a file named config.json with below contents
+Create a `config.json` file with your WooCommerce credentials:
+```json
 {
-    "CONSUMER_KEY": "ck_XXXX",
-    "CONSUMER_SECRET": "cs_XXXX",
-    "SITE_URL": "https://example.com"
+    "CONSUMER_KEY": "your_consumer_key",
+    "CONSUMER_SECRET": "your_consumer_secret",
+    "SITE_URL": "https://your-store-url.com"
 }
+```
 
-- Setup python 
-1. Run the main script to import and process product titles:
+The setup script will create this file automatically.
+
+## Manual Setup and Usage
+
+### Python Implementation
+
+1. Install dependencies:
+   ```bash
+   pip install requests
+   ```
+
+2. Run the script:
    ```bash
    python main.py
    ```
-2. To start fresh or reset the data collection:
-   ```bash
-   python3 -c "from reset_script import reset_script; reset_script()"
-   ```
 
-- Setup nodejs manually
+### Node.js Implementation
+
 1. Install dependencies:
    ```bash
    npm init -y
-   ```
-   ```bash
    npm install @woocommerce/woocommerce-rest-api
    ```
 
-2. Run the Node.js script to import and process product titles:
+2. Run the script:
    ```bash
    node main.js
    ```
 
-3. To start fresh, simply delete the generated files:
-   ```bash
-   rm products.csv current_page.txt
-   ```
+## Output Files
+
+### Product Titles Importer
+- `products.csv`: Contains product titles
+- `current_page.txt`: Tracks import progress
+
+### Full Product Data Importer
+- `product_data.csv`: Contains all product data fields
+- `current_page.txt`: Tracks import progress
+
+## Reset Progress
+
+### For Product Titles Importer
+```bash
+python3 -c "from reset_script import reset_script; reset_script()"
+```
+or
+```bash
+rm products.csv current_page.txt
+```
+
+### For Full Product Data Importer
+```bash
+rm product_data.csv current_page.txt
+```
+
+## Troubleshooting
+
+1. **API Connection Issues**
+   - Verify your WooCommerce REST API credentials
+   - Ensure your store URL is correct and accessible
+   - Check your internet connection
+
+2. **Missing Dependencies**
+   - For Python: `pip install requests`
+   - For Node.js: `npm install @woocommerce/woocommerce-rest-api`
+
+3. **Permission Issues**
+   - Ensure script files are executable: `chmod +x main.sh`
+   - Check write permissions in the directory
+
+## Limitations
+
+- Fetches maximum 50 products per request (WooCommerce API limitation)
+- Full Product Data Importer:
+  - Uses first category for products with multiple categories
+  - Uses first image for products with multiple images
+
+## Best Practices
+
+1. Use the Python virtual environment for isolation
+2. Allow the script to complete its run when possible
+3. Monitor the console output for progress and errors
+4. Keep your API credentials secure
+5. Regular backups of important data
 
 ## Contributing
+
 Contributions are welcome! Please follow these steps:
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Commit your changes with descriptive messages.
-4. Submit a pull request.
+1. Fork the repository
+2. Create a new branch for your feature or bugfix
+3. Commit your changes with descriptive messages
+4. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Notes
+
+- The scripts include a 1-second delay between API requests to avoid rate limiting
+- Large catalogs may take significant time to process
+- Progress is displayed in real-time in the console
+- Scripts can be safely interrupted and resumed
+- Data is exported in UTF-8 encoding
