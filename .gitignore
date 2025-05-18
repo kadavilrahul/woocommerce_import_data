@@ -1,23 +1,18 @@
 # Ignore sensitive files
 # Added to ignore Python cache directories
 __pycache__/
-# Ignore generated files
-current_page.txt
-products.xlsx
 
 # Ignore folder
 backups/
 node_modules/
+fetch_product_data/fetchvenv/
+fetch_order_data//ordervenv
+fetch_product_titles/fetchvenv
 
 # Ignore shell scripts, log files, .json and pid files
-*.log
-*.pid
-*.xlsx
-*.txt
-*.json
-*.csv
-
-# Ignore specific shell script files
-setup_file_versioning.sh
-file_versioning.sh
-check_versioning.sh
+*.log*
+*.pid*
+*.xlsx*
+*.txt*
+*.json*
+*.csv*
