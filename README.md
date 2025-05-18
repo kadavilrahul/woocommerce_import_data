@@ -43,8 +43,8 @@ A collection of tools to import data from WooCommerce stores via the REST API. T
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/kadavilrahul/woocommerce_import_product_data.git
-   cd woocommerce_import_product_data
+   git clone https://github.com/kadavilrahul/woocommerce_import_data.git
+   cd woocommerce_import_data
    ```
 
 2. Choose your desired tool:
