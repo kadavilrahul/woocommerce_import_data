@@ -13,6 +13,4 @@ fetch_product_titles/fetchvenv
 *.log*
 *.pid*
 *.xlsx*
-*.txt*
-*.json*
 *.csv*

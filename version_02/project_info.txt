@@ -1,0 +1,84 @@
+=== PROJECT INFORMATION ===
+Generated on: Mon Jun  2 10:38:55 AM UTC 2025
+
+=== Project Structure ===
+Directory structure for: .
+- config.json
+- fetch_order_data_database.py
+- fetch_order_data_rest_api.py
+- - main.js
+- - main.py
+- - main.sh
+- - README.md
+- - reset_script.py
+- - main.js
+- - main.py
+- - main.sh
+- - README.md
+- - reset_script.py
+- generate_prd.py
+- project_info.sh
+- project_info.txt
+- project_structure.txt
+- README.md
+- requirements.txt
+- reset_script_fetch_order_data_rest_api.py
+- wp_activity_domain_1.py
+- wp_activity_domain_2.py
+
+=== Sensitive Information Scan ===
+./fetch_order_data_rest_api.py:CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
+./fetch_order_data_rest_api.py:if not CONSUMER_KEY or not CONSUMER_SECRET or not SITE_URL:
+./fetch_order_data_rest_api.py:    print("❌ Error: Missing required environment variables (CONSUMER_KEY, CONSUMER_SECRET, SITE_URL).")
+./fetch_order_data_rest_api.py:        'consumer_secret': CONSUMER_SECRET
+./fetch_product_data/main.js:    consumerSecret: config.CONSUMER_SECRET,
+./fetch_product_data/main.sh:    read -p "Enter Consumer Secret (e.g., cs_xxxx): " consumer_secret
+./fetch_product_data/main.sh:    "CONSUMER_SECRET": "${consumer_secret}",
+./fetch_product_data/main.py:        CONSUMER_SECRET = config['CONSUMER_SECRET']
+./fetch_product_data/main.py:        'consumer_secret': CONSUMER_SECRET
+./fetch_product_data/README.md:   - Consumer Secret (from WooCommerce REST API settings)
+./fetch_product_data/README.md:    "CONSUMER_SECRET": "your_consumer_secret",
+./.env:DATABASE_PASSWORD_1=your_database1_password
+./.env:DATABASE_PASSWORD_2=your_database2_password
+./.env:CONSUMER_SECRET=your_consumer_secret
+./wp_activity_domain_2.py:DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD_2")
+./wp_activity_domain_2.py:            password=DATABASE_PASSWORD
+./generate_prd.py:    if not os.getenv("GOOGLE_API_KEY") and not os.getenv("GEMINI_API_KEY"):
+./generate_prd.py:        console.print("  export GOOGLE_API_KEY='your_api_key_here'")
+./generate_prd.py:        console.print("  export GEMINI_API_KEY='your_api_key_here'")
+./config.json:    "CONSUMER_SECRET": "cs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+./fetch_product_titles/main.js:    consumerSecret: config.CONSUMER_SECRET,
+./fetch_product_titles/main.sh:    read -p "Enter Consumer Secret (e.g., cs_xxxx): " consumer_secret
+./fetch_product_titles/main.sh:    "CONSUMER_SECRET": "${consumer_secret}",
+./fetch_product_titles/main.py:        CONSUMER_SECRET = config['CONSUMER_SECRET']
+./fetch_product_titles/main.py:        'consumer_secret': CONSUMER_SECRET
+./fetch_product_titles/README.md:    "CONSUMER_SECRET": "cs_XXXX",
+./fetch_order_data_database.py:        db_password = os.getenv(f"DATABASE_PASSWORD_{db_number}")
+./fetch_order_data_database.py:            password=db_password
+./project_info.sh:         -E "(API_KEY|SECRET|PASSWORD|TOKEN|DATABASE_URL)" "$directory" 2>/dev/null; then
+./README.md:    "CONSUMER_SECRET": "your_consumer_secret",
+./wp_activity_domain_1.py:DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD_1")
+./wp_activity_domain_1.py:            password=DATABASE_PASSWORD
+
+⚠️  WARNING: Potential sensitive information found above!
+
+=== Line Counts ===
+154 ./fetch_order_data_rest_api.py
+122 ./fetch_product_data/main.js
+99 ./fetch_product_data/main.sh
+160 ./fetch_product_data/main.py
+17 ./fetch_product_data/reset_script.py
+455 ./wp_activity_domain_2.py
+499 ./generate_prd.py
+90 ./fetch_product_titles/main.js
+87 ./fetch_product_titles/main.sh
+130 ./fetch_product_titles/main.py
+18 ./fetch_product_titles/reset_script.py
+274 ./fetch_order_data_database.py
+17 ./reset_script_fetch_order_data_rest_api.py
+93 ./project_info.sh
+455 ./wp_activity_domain_1.py
+
+📊 Summary:
+Total files: 15
+Total lines: 2670
