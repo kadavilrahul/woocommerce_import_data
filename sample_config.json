@@ -1,0 +1,27 @@
+{
+    "websites": {
+        "website1": {
+            "CONSUMER_KEY": "ck_your_consumer_key_here",
+            "CONSUMER_SECRET": "cs_your_consumer_secret_here",
+            "SITE_URL": "https://your-website1.com",
+            "DOMAIN": "your-website1.com",
+            "DATABASE_IP": "your_database_ip_here",
+            "DATABASE_NAME": "your_database_name_here",
+            "DATABASE_USER": "your_database_user_here",
+            "DATABASE_PASSWORD": "your_database_password_here",
+            "DATABASE_TABLE_PREFIX": "wp_"
+        },
+        "website2": {
+            "CONSUMER_KEY": "ck_your_consumer_key_here",
+            "CONSUMER_SECRET": "cs_your_consumer_secret_here",
+            "SITE_URL": "https://your-website2.com",
+            "DOMAIN": "your-website2.com",
+            "DATABASE_IP": "your_database_ip_here",
+            "DATABASE_NAME": "your_database_name_here",
+            "DATABASE_USER": "your_database_user_here",
+            "DATABASE_PASSWORD": "your_database_password_here",
+            "DATABASE_TABLE_PREFIX": "wp_"
+        }
+    },
+    "default_website": "website1"
+}

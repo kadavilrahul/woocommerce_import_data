@@ -1,7 +1,7 @@
 import os
 
-CSV_FILE = "order_data.csv"
-PAGE_PROPERTY_FILE = "current_page.txt"
+CSV_FILE = "../data/product_data.csv"
+PAGE_PROPERTY_FILE = "../data/product_data_page.txt"
 
 def reset_script():
     """Reset the script by removing the CSV file and page tracking file."""

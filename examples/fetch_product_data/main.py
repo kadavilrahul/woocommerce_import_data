@@ -2,28 +2,55 @@ import requests
 import time
 import json
 import csv
+import os
+import sys
+import argparse
 from reset_script import reset_script
 
-# Load configuration from config.json
-try:
-    with open('config.json') as f:
-        config = json.load(f)
-        CONSUMER_KEY = config['CONSUMER_KEY']
-        CONSUMER_SECRET = config['CONSUMER_SECRET']
-        SITE_URL = config['SITE_URL']
-    print('✓ Loaded configuration from config.json')
-except FileNotFoundError:
-    print("❌ Error: config.json not found. Please create it with your WooCommerce credentials.")
-    exit(1)
-except json.JSONDecodeError:
-    print("❌ Error: config.json is not valid JSON. Please check the format.")
-    exit(1)
-except KeyError as e:
-    print(f"❌ Error: Missing required key {e} in config.json")
-    exit(1)
+from dotenv import load_dotenv
 
-CSV_FILE = "product_data.csv"
-PAGE_PROPERTY_FILE = "current_page.txt"  # File to store the current page number
+# Load environment variables
+load_dotenv()
+
+def load_configuration(website_name=None):
+    """Load configuration from environment variables"""
+    if website_name == 'silkroad':
+        config = {
+            'CONSUMER_KEY': os.getenv('SILKROAD_CONSUMER_KEY'),
+            'CONSUMER_SECRET': os.getenv('SILKROAD_CONSUMER_SECRET'),
+            'SITE_URL': os.getenv('SILKROAD_SITE_URL'),
+            'DOMAIN': os.getenv('DOMAIN_2')
+        }
+        print('✓ Loaded Silk Road configuration from environment variables')
+    elif website_name == 'nilgiri':
+        config = {
+            'CONSUMER_KEY': os.getenv('NILGIRI_CONSUMER_KEY'),
+            'CONSUMER_SECRET': os.getenv('NILGIRI_CONSUMER_SECRET'),
+            'SITE_URL': os.getenv('NILGIRI_SITE_URL'),
+            'DOMAIN': os.getenv('DOMAIN_1')
+        }
+        print('✓ Loaded Nilgiri configuration from environment variables')
+    else:
+        # Default configuration
+        config = {
+            'CONSUMER_KEY': os.getenv('CONSUMER_KEY'),
+            'CONSUMER_SECRET': os.getenv('CONSUMER_SECRET'),
+            'SITE_URL': os.getenv('SITE_URL'),
+            'DOMAIN': os.getenv('DOMAIN_1')
+        }
+        print('✓ Loaded default configuration from environment variables')
+    
+    # Validate configuration
+    required_keys = ['CONSUMER_KEY', 'CONSUMER_SECRET', 'SITE_URL']
+    missing_keys = [key for key in required_keys if not config.get(key)]
+    if missing_keys:
+        print(f"❌ Error: Missing required configuration: {', '.join(missing_keys)}")
+        exit(1)
+    
+    return config
+
+CSV_FILE = "../data/product_data.csv"
+PAGE_PROPERTY_FILE = "../data/product_data_page.txt"  # File to store the current page number
 
 
 def get_current_page():
@@ -65,14 +92,14 @@ def extract_product_data(product):
         return None
 
 
-def fetch_products(page):
+def fetch_products(page, config):
     """Fetch product data from WooCommerce API."""
-    api_url = f"{SITE_URL}/wp-json/wc/v3/products"
+    api_url = f"{config['SITE_URL']}/wp-json/wc/v3/products"
     params = {
         'page': page,
         'per_page': 50,
-        'consumer_key': CONSUMER_KEY,
-        'consumer_secret': CONSUMER_SECRET
+        'consumer_key': config['CONSUMER_KEY'],
+        'consumer_secret': config['CONSUMER_SECRET']
     }
     
     try:
@@ -98,6 +125,8 @@ def fetch_products(page):
 def write_products_to_csv(products):
     """Write product data to a CSV file."""
     try:
+        # Ensure data directory exists
+        os.makedirs(os.path.dirname(CSV_FILE), exist_ok=True)
         # Open in append mode to add new products
         mode = 'a' if get_current_page() > 1 else 'w'
         with open(CSV_FILE, mode, newline='', encoding='utf-8') as f:
@@ -119,15 +148,18 @@ def write_products_to_csv(products):
         print(f"❌ Error writing to CSV file: {e}")
 
 
-def fetch_woocommerce_products():
+def fetch_woocommerce_products(config, website_name="default"):
     """Main function to fetch product data and save them to CSV."""
-    print(f"\n🔄 Starting to fetch product data from {SITE_URL}")
+    print(f"\n🔄 Starting to fetch product data from {config['SITE_URL']}")
+    if website_name != "default":
+        print(f"📊 Website: {website_name}")
+    
     current_page = get_current_page()
     total_products = 0
 
     while True:
         print(f"📥 Fetching page {current_page}...", end=' ', flush=True)
-        products, has_more = fetch_products(current_page)
+        products, has_more = fetch_products(current_page, config)
         
         if not products:
             if current_page == 1:
@@ -152,9 +184,15 @@ def fetch_woocommerce_products():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Fetch WooCommerce product data with multi-website support')
+    parser.add_argument('--website', type=str, help='Website name (silkroad, nilgiri, or from config.json)')
+    
+    args = parser.parse_args()
+    
     print('🚀 Starting product data import...\n')
     try:
-        fetch_woocommerce_products()
+        config = load_configuration(args.website)
+        fetch_woocommerce_products(config, args.website or "default")
     except KeyboardInterrupt:
         print("\n⚠️ Process interrupted by user. Progress has been saved.")
     except Exception as e:

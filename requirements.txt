@@ -1,5 +1,5 @@
 # Core Agno framework
-agno
+# agno
 
 # Google Gemini API packages (both needed)
 google-generativeai
@@ -9,6 +9,7 @@ google-genai
 sqlalchemy
 pydantic
 rich
+mysql-connector-python
 
 # Environment variables
 python-dotenv

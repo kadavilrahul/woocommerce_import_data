@@ -4,7 +4,7 @@ set -e  # Exit on any error
 
 # Function to cleanup temporary files
 cleanup() {
-    rm -f project_structure.txt sensitive_info.txt line_counts.txt
+    rm -f data/project_structure.txt data/sensitive_info.txt data/line_counts.txt data/project_info.txt
 }
 
 # Set trap to cleanup on exit
@@ -32,7 +32,8 @@ echo "Generating project structure..."
         find "$directory" -type f -not -path '*/\.*' -not -path '*/__pycache__/*' \
              -not -path '*/node_modules/*' | sort | sed 's|[^/]*/|- |g'
     fi
-} > project_structure.txt
+    mkdir -p data
+} > data/project_structure.txt
 
 # Search for sensitive information
 echo "Scanning for sensitive information..."
@@ -45,7 +46,7 @@ echo "Scanning for sensitive information..."
     else
         echo "✅ No sensitive patterns found"
     fi
-} > sensitive_info.txt
+} > data/sensitive_info.txt
 
 # Count lines of code for various file types
 echo "Counting lines of code..."
@@ -75,7 +76,7 @@ echo "Counting lines of code..."
     if [ $file_count -eq 0 ]; then
         echo "No code files found"
     fi
-} > line_counts.txt
+} > data/line_counts.txt
 
 # Store project information
 echo "Creating project_info.txt..."
@@ -88,7 +89,7 @@ echo "Creating project_info.txt..."
     cat sensitive_info.txt
     echo ""
     cat line_counts.txt
-} > project_info.txt
+} > data/project_info.txt
 
-echo "✅ Project information saved to project_info.txt"
-echo "📁 Individual reports: project_structure.txt, sensitive_info.txt, line_counts.txt"
+echo "✅ Project information saved to data/project_info.txt"
+echo "📁 Individual reports: data/project_structure.txt, data/sensitive_info.txt, data/line_counts.txt"

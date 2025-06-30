@@ -1,16 +1,74 @@
-# Ignore sensitive files
-# Added to ignore Python cache directories
+# Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
 
-# Ignore folder
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+fetchvenv/
+ordervenv/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project specific
 backups/
 node_modules/
-fetch_product_data/fetchvenv/
-fetch_order_data//ordervenv
-fetch_product_titles/fetchvenv
+tmp/
+temp/
 
-# Ignore shell scripts, log files, .json and pid files
-*.log*
-*.pid*
-*.xlsx*
-*.csv*
+# Sensitive files (exclude actual credentials)
+.env
+config.json
+*.key
+*.pem
+
+# Include sample files (these should be committed)
+!sample.env
+!sample_config.json
+
+# Output files
+*.log
+*.pid
+*.xlsx
+*.csv
+current_page.txt
+
+# Temporary files
+tmp_code_*.bash
+project_info.txt
+project_structure.txt
+sensitive_info.txt
+line_counts.txt
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3

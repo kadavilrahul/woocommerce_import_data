@@ -6,6 +6,7 @@ Script to fetch WooCommerce orders data from MySQL database.
 import os
 import sys
 import csv
+import json
 import mysql.connector
 from dotenv import load_dotenv
 from datetime import datetime
@@ -14,22 +15,22 @@ import argparse
 # Load environment variables
 load_dotenv()
 
-def get_db_connection(db_number=1):
+def get_db_connection(website_config):
     """
-    Create a database connection based on environment variables.
+    Create a database connection based on website config.
     
     Args:
-        db_number (int): Database number to connect to (1 or 2)
+        website_config (dict): Website configuration from config.json
         
     Returns:
         mysql.connector.connection: Database connection object
     """
     try:
-        # Get database credentials from environment variables
-        db_host = os.getenv(f"IP_{db_number}")
-        db_name = os.getenv(f"DATABASE_NAME_{db_number}")
-        db_user = os.getenv(f"DATABASE_USER_{db_number}")
-        db_password = os.getenv(f"DATABASE_PASSWORD_{db_number}")
+        # Get database credentials from website config
+        db_host = website_config['DATABASE_IP']
+        db_name = website_config['DATABASE_NAME']
+        db_user = website_config['DATABASE_USER']
+        db_password = website_config['DATABASE_PASSWORD']
         
         print(f"Connecting to database: {db_name} at {db_host} with user {db_user}")
         
@@ -185,8 +186,9 @@ def export_to_csv(orders, filename=None):
         
     # Generate filename if not provided
     if not filename:
+        os.makedirs("data", exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"woocommerce_orders_{timestamp}.csv"
+        filename = f"data/woocommerce_orders_{timestamp}.csv"
     
     # Create a flattened list for CSV export
     flattened_orders = []
@@ -232,24 +234,48 @@ def export_to_csv(orders, filename=None):
 
 def main():
     """Main function to run the script."""
+    # Load config file
+    try:
+        with open('config.json') as config_file:
+            config = json.load(config_file)
+    except Exception as e:
+        print(f"Error loading config.json: {e}")
+        sys.exit(1)
+
+    # Interactive website selection
+    print("Available websites:")
+    websites = list(config['websites'].keys())
+    for i, website in enumerate(websites, 1):
+        print(f"{i}. {website}")
+    
+    while True:
+        try:
+            choice = int(input("Select website [1-{}]: ".format(len(websites))))
+            if 1 <= choice <= len(websites):
+                selected_website = websites[choice-1]
+                break
+            print("Invalid selection. Please try again.")
+        except ValueError:
+            print("Please enter a number.")
+
+    website_config = config['websites'][selected_website]
+    table_prefix = website_config['DATABASE_TABLE_PREFIX']
+    
     parser = argparse.ArgumentParser(description='Fetch WooCommerce orders from MySQL database')
-    parser.add_argument('--db', type=int, choices=[1, 2], default=1, help='Database to use (1 or 2)')
     parser.add_argument('--days', type=int, help='Number of days to look back for orders')
     parser.add_argument('--start', type=str, help='Start date (YYYY-MM-DD)')
     parser.add_argument('--end', type=str, help='End date (YYYY-MM-DD)')
     parser.add_argument('--output', type=str, help='Output CSV filename')
-    parser.add_argument('--prefix', type=str, default='wp_', help='WordPress table prefix (default: wp_)')
     
     args = parser.parse_args()
     
-    # Get database connection
-    connection = get_db_connection(args.db)
+    # Get database connection using selected website's config
+    connection = get_db_connection(website_config)
     
     if not connection:
         return
     
-    # Use the provided table prefix or default to wp_
-    table_prefix = args.prefix
+    # Use the website's table prefix from config
     
     print(f"Using table prefix: {table_prefix}")
     
