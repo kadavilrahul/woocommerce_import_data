@@ -1,3 +1,4 @@
 File: main.sh
 Options that are working
-1, 2, 3, 4 tested OK (Tested for one website only)
+1, 2, 3, tested OK (Tested for one website only)
+0, 6, 7, 8 tested OK

@@ -4,7 +4,7 @@ set -e  # Exit on any error
 
 # Function to cleanup temporary files
 cleanup() {
-    rm -f data/project_structure.txt data/sensitive_info.txt data/line_counts.txt data/project_info.txt
+    rm -f data/project_structure.txt data/sensitive_info.txt data/line_counts.txt
 }
 
 # Set trap to cleanup on exit
@@ -19,6 +19,9 @@ else
     directory="$1"
 fi
 
+# Create data directory first
+mkdir -p data
+
 # Generate project structure
 echo "Generating project structure..."
 {
@@ -32,7 +35,6 @@ echo "Generating project structure..."
         find "$directory" -type f -not -path '*/\.*' -not -path '*/__pycache__/*' \
              -not -path '*/node_modules/*' | sort | sed 's|[^/]*/|- |g'
     fi
-    mkdir -p data
 } > data/project_structure.txt
 
 # Search for sensitive information
@@ -84,11 +86,11 @@ echo "Creating project_info.txt..."
     echo "=== PROJECT INFORMATION ==="
     echo "Generated on: $(date)"
     echo ""
-    cat project_structure.txt
+    cat data/project_structure.txt
     echo ""
-    cat sensitive_info.txt
+    cat data/sensitive_info.txt
     echo ""
-    cat line_counts.txt
+    cat data/line_counts.txt
 } > data/project_info.txt
 
 echo "✅ Project information saved to data/project_info.txt"

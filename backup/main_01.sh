@@ -390,40 +390,12 @@ main() {
                 ;;
             4)
                 echo "Running Activity Monitor..."
-                # Load .env file if exists
-                if [ -f ".env" ]; then
-                    set -a
-                    source .env
-                    set +a
-                fi
-                
-                echo "Select domain to monitor:"
-                domain1=${DOMAIN_1:-"Domain 1"}
-                domain2=${DOMAIN_2:-"Domain 2"}
-                echo "1. $domain1"
-                echo "2. $domain2"
-                read -p "Select domain [1-2]: " domain_num
-                
-                # Generate timestamped CSV filename
-                csv_file="activity_log_$(date +%Y%m%d_%H%M%S).csv"
-                
-                read -p "Enter number of entries to show [default: 5]: " limit
-                limit=${limit:-5}  # Default to 5 if empty
-                
-                echo "Running activity monitor for recent entries..."
-                run_python_with_venv monitor_activity.py --domain "$domain_num" --limit "$limit" --csv "$csv_file"
-                if [ -s "$csv_file" ]; then
-                    echo "Activity log saved with data: $csv_file"
-                else
-                    echo "No recent activity records found - empty log created: $csv_file"
-                fi
+                run_python_with_venv monitor_activity_unified.py
                 read -p "Press Enter to continue..."
                 ;;
             5)
                 echo "Installing dependencies..."
-                echo "Setting up Python virtual environment and installing packages..."
-                setup_python_env
-                echo "All dependencies installed successfully!"
+                python3 -m pip install -r requirements.txt
                 read -p "Press Enter to continue..."
                 ;;
             6)
