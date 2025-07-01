@@ -343,7 +343,7 @@ main() {
     
     while true; do
         show_menu
-        read -p "Select option [0-9]: " choice
+        read -p "Select option [0-10]: " choice
         
         case $choice in
             1)
