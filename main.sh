@@ -34,45 +34,22 @@ setup_nodejs_deps() {
 
 # Cleanup function for temporary files
 cleanup_env_files() {
-    echo "Cleaning up temporary files..."
-    echo "Select cleanup option:"
-    echo "1. Clean cache files (__pycache__, node_modules)"
-    echo "2. Clean all temporary files (cache + venv + tmp files)"
-    echo "3. Cancel"
-    read -p "Select option [1-3]: " cleanup_choice
+    echo "WARNING: This will delete ALL temporary files including:"
+    echo "- Python cache (__pycache__)"
+    echo "- Node.js modules (node_modules)"
+    echo "- Virtual environment (venv)"
+    echo "- Temporary files (*.log, *.pid, tmp_code_*.bash)"
+    echo "- Node.js package files (package-lock.json, package.json)"
+    read -p "Are you sure you want to clean all? (y/N): " confirm
     
-    case $cleanup_choice in
-        1)
-            echo "WARNING: This will delete cache files"
-            read -p "Are you sure you want to continue? (y/N): " confirm
-            if [[ $confirm =~ ^[Yy]$ ]]; then
-                echo "Cleaning cache files..."
-                rm -rf __pycache__ node_modules
-                rm -f tmp_code_*.bash
-                echo "Cache files cleaned (config files preserved)"
-            else
-                echo "Cleanup cancelled"
-            fi
-            ;;
-        2)
-            echo "WARNING: This will delete ALL temporary files including virtual environment"
-            read -p "Are you sure you want to continue? (y/N): " confirm
-            if [[ $confirm =~ ^[Yy]$ ]]; then
-                echo "Cleaning all temporary files..."
-                rm -rf __pycache__ node_modules venv
-                rm -f tmp_code_*.bash *.log *.pid
-                echo "All temporary files cleaned (config files preserved)"
-            else
-                echo "Cleanup cancelled"
-            fi
-            ;;
-        3)
-            echo "Cleanup cancelled"
-            ;;
-        *)
-            echo "Invalid option."
-            ;;
-    esac
+    if [[ $confirm =~ ^[Yy]$ ]]; then
+        echo "Cleaning all temporary files..."
+        rm -rf __pycache__ node_modules venv
+        rm -f tmp_code_*.bash *.log *.pid package-lock.json package.json
+        echo "All temporary files cleaned (config files preserved)"
+    else
+        echo "Cleanup cancelled"
+    fi
 }
 
 # Setup Python virtual environment and dependencies
@@ -212,6 +189,8 @@ show_menu() {
     echo "6. Config Test - Test configuration settings"
     echo "7. Cleanup - Clean environment and data files"
     echo "8. Generate Project Report"
+    echo "9. Command Reference - Show useful commands"
+    echo "10. Reset Data Files"
     echo "0. Exit"
     echo ""
 }
@@ -222,8 +201,7 @@ product_data_menu() {
     echo "=================="
     echo "1. Python implementation"
     echo "2. Node.js implementation"
-    echo "3. Reset/Clean product data"
-    echo "4. Back to main menu"
+    echo "3. Back to main menu"
     read -p "Select option [1-4]: " pd_choice
     
     case $pd_choice in
@@ -256,8 +234,6 @@ product_data_menu() {
             fi
             ;;
         3)
-            echo "Resetting product data..."
-            python3 -c "from fetch_product_data_reset import reset_script; reset_script()"
             ;;
         4)
             return
@@ -274,8 +250,7 @@ orders_menu() {
     echo "============="
     echo "1. API - Fetch orders via WooCommerce API"
     echo "2. Database - Fetch orders from database"
-    echo "3. Reset/Clean order data"
-    echo "4. Back to main menu"
+    echo "3. Back to main menu"
     read -p "Select option [1-4]: " order_choice
     
     case $order_choice in
@@ -302,8 +277,6 @@ orders_menu() {
             python3 fetch_orders_database.py
             ;;
         3)
-            echo "Resetting order data..."
-            python3 -c "from fetch_orders_reset import reset_script; reset_script()"
             ;;
         4)
             return
@@ -320,8 +293,7 @@ product_titles_menu() {
     echo "===================="
     echo "1. Python implementation"
     echo "2. Node.js implementation"
-    echo "3. Reset/Clean product titles data"
-    echo "4. Back to main menu"
+    echo "3. Back to main menu"
     read -p "Select option [1-4]: " pt_choice
     
     case $pt_choice in
@@ -354,8 +326,6 @@ product_titles_menu() {
             fi
             ;;
         3)
-            echo "Resetting product titles data..."
-            python3 -c "from fetch_product_titles_reset import reset_script; reset_script()"
             ;;
         4)
             return
@@ -373,7 +343,7 @@ main() {
     
     while true; do
         show_menu
-        read -p "Select option [0-8]: " choice
+        read -p "Select option [0-9]: " choice
         
         case $choice in
             1)
@@ -420,24 +390,83 @@ main() {
                 read -p "Press Enter to continue..."
                 ;;
             5)
-                echo "Installing dependencies..."
-                echo "Setting up Python virtual environment and installing packages..."
-                setup_python_env
-                echo "All dependencies installed successfully!"
-                read -p "Press Enter to continue..."
+               echo "Dependency Installation"
+               echo "======================="
+               echo "1. Install Python dependencies"
+               echo "2. Install Node.js dependencies"
+               echo "3. Install both"
+               echo "4. Back to main menu"
+               read -p "Select option [1-4]: " dep_choice
+               
+               case $dep_choice in
+                   1)
+                       echo "Setting up Python virtual environment..."
+                       setup_python_env
+                       echo "✓ Python dependencies installed"
+                       show_command_reference
+                       ;;
+                   2)
+                       if check_nodejs; then
+                           echo "Installing Node.js dependencies..."
+                           setup_nodejs_deps
+                           echo "✓ Node.js dependencies installed"
+                           show_command_reference
+                       else
+                           echo "Node.js not available - skipping"
+                       fi
+                       ;;
+                   3)
+                       echo "Setting up Python virtual environment..."
+                       setup_python_env
+                       if check_nodejs; then
+                           echo "Installing Node.js dependencies..."
+                           setup_nodejs_deps
+                           echo "✓ All dependencies installed"
+                           show_command_reference
+                       else
+                           echo "Node.js not available - installed Python only"
+                       fi
+                       ;;
+                   4)
+                       ;;
+                   *)
+                       echo "Invalid option"
+                       ;;
+               esac
+               read -p "Press Enter to continue..."
                 ;;
             6)
-                echo "Configuration Test..."
-                python3 -c "
-from dotenv import load_dotenv
-import os
-load_dotenv()
-print('Testing configuration...')
-print(f'Site URL: {os.getenv(\"SITE_URL\", \"Not configured\")}')
-print(f'Consumer Key: {os.getenv(\"CONSUMER_KEY\", \"Not configured\")[:10] + \"...\" if os.getenv(\"CONSUMER_KEY\") else \"Not configured\"}')
-print(f'Database: {os.getenv(\"DATABASE_NAME_1\", \"Not configured\")}')
-"
-                read -p "Press Enter to continue..."
+               echo "Configuration Check:"
+               echo "==================="
+               
+               # Initialize status
+               all_ok=true
+               
+               # Check .env file
+               if [ -f ".env" ] && [ -s ".env" ]; then
+                   echo "✓ .env"
+               else
+                   echo "✗ .env"
+                   all_ok=false
+               fi
+               
+               # Check config.json file
+               if [ -f "config.json" ] && jq empty config.json >/dev/null 2>&1; then
+                   echo "✓ config.json"
+               else
+                   echo "✗ config.json"
+                   all_ok=false
+               fi
+               
+               # Show overall status
+               if $all_ok; then
+                   echo "✓✓ All configurations OK ✓✓"
+               else
+                   echo "✗ Some configurations missing/invalid"
+               fi
+               
+               echo "==================="
+               read -p "Press Enter to continue..."
                 ;;
             7)
                 cleanup_env_files
@@ -452,12 +481,41 @@ print(f'Database: {os.getenv(\"DATABASE_NAME_1\", \"Not configured\")}')
                 echo "Goodbye!"
                 exit 0
                 ;;
-            *)
-                echo "Invalid option. Please select 0-8."
+            10)
+                echo "Resetting data files..."
+                rm -f data/product_*.csv data/product_*.txt
+                echo "All product data files removed from /data directory"
                 read -p "Press Enter to continue..."
                 ;;
-        esac
-    done
+           10)
+               echo "Invalid option. Please select 0-9."
+               read -p "Press Enter to continue..."
+               ;;
+       esac
+   done
+}
+
+# Show command reference
+show_command_reference() {
+   clear
+   echo "Command Reference"
+   echo "================"
+   echo ""
+   echo "Python Virtual Environment:"
+   echo "--------------------------"
+   echo "1. Create virtual environment: python3 -m venv venv"
+   echo "2. Activate virtual environment: source venv/bin/activate"
+   echo "3. Deactivate virtual environment: deactivate"
+   echo "4. Install requirements: pip install -r requirements.txt"
+   echo ""
+   echo "Node.js:"
+   echo "--------"
+   echo "1. Initialize project: npm init -y"
+   echo "2. Install dependencies: npm install @woocommerce/woocommerce-rest-api"
+   echo "3. Run script: node script.js"
+   echo ""
+   echo "Press Enter to return to menu..."
+   read
 }
 
 # Run main function

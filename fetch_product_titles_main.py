@@ -5,7 +5,6 @@ import csv
 import os
 import sys
 import argparse
-from fetch_product_titles_reset import reset_script
 
 from dotenv import load_dotenv
 
