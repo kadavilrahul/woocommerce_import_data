@@ -146,26 +146,46 @@ def fetch_woocommerce_orders(config, website_name="default"):
 
 def get_website_config(website_name=None):
     """Get configuration for a website"""
+    # Try to load from config.json first
+    try:
+        with open('config.json', 'r') as f:
+            config_data = json.load(f)
+        
+        websites = config_data.get('websites', {})
+        default_website = config_data.get('default_website')
+        
+        if website_name and website_name in websites:
+            return websites[website_name]
+        elif default_website and default_website in websites:
+            return websites[default_website]
+        elif websites:
+            # Return first available website
+            return list(websites.values())[0]
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        pass
+    
+    # Fallback to environment variables
     return {
         'CONSUMER_KEY': os.getenv('CONSUMER_KEY'),
         'CONSUMER_SECRET': os.getenv('CONSUMER_SECRET'),
         'SITE_URL': os.getenv('SITE_URL'),
         'DOMAIN': os.getenv('DOMAIN_1')
     }
-    else:
-        # Default configuration
-        return {
-            'CONSUMER_KEY': os.getenv('CONSUMER_KEY'),
-            'CONSUMER_SECRET': os.getenv('CONSUMER_SECRET'),
-            'SITE_URL': os.getenv('SITE_URL'),
-            'DOMAIN': os.getenv('DOMAIN_1')
-        }
 
 def list_available_websites():
-    """List available websites based on environment variables"""
+    """List available websites from config.json or environment variables"""
     websites = []
-    if os.getenv('CONSUMER_KEY'):
-        websites.append('default')
+    
+    # Try to load from config.json first
+    try:
+        with open('config.json', 'r') as f:
+            config_data = json.load(f)
+        websites = list(config_data.get('websites', {}).keys())
+    except (FileNotFoundError, json.JSONDecodeError):
+        # Fallback to environment variables
+        if os.getenv('CONSUMER_KEY'):
+            websites.append('default')
+    
     return websites
 
 def select_website_interactive():

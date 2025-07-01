@@ -36,24 +36,38 @@ setup_nodejs_deps() {
 cleanup_env_files() {
     echo "Cleaning up temporary files..."
     echo "Select cleanup option:"
-    echo "1. Clean temporary files (__pycache__, node_modules)"
-    echo "2. Cancel"
-    read -p "Select option [1-2]: " cleanup_choice
+    echo "1. Clean cache files (__pycache__, node_modules)"
+    echo "2. Clean all temporary files (cache + venv + tmp files)"
+    echo "3. Cancel"
+    read -p "Select option [1-3]: " cleanup_choice
     
     case $cleanup_choice in
         1)
-            echo "⚠️ WARNING: This will delete temporary files"
+            echo "WARNING: This will delete cache files"
             read -p "Are you sure you want to continue? (y/N): " confirm
             if [[ $confirm =~ ^[Yy]$ ]]; then
-                echo "🧹 Cleaning temporary files..."
+                echo "Cleaning cache files..."
                 rm -rf __pycache__ node_modules
-                echo "✅ Temporary files cleaned (config files preserved)"
+                rm -f tmp_code_*.bash
+                echo "Cache files cleaned (config files preserved)"
             else
-                echo "❌ Cleanup cancelled"
+                echo "Cleanup cancelled"
             fi
             ;;
         2)
-            echo "❌ Cleanup cancelled"
+            echo "WARNING: This will delete ALL temporary files including virtual environment"
+            read -p "Are you sure you want to continue? (y/N): " confirm
+            if [[ $confirm =~ ^[Yy]$ ]]; then
+                echo "Cleaning all temporary files..."
+                rm -rf __pycache__ node_modules venv
+                rm -f tmp_code_*.bash *.log *.pid
+                echo "All temporary files cleaned (config files preserved)"
+            else
+                echo "Cleanup cancelled"
+            fi
+            ;;
+        3)
+            echo "Cleanup cancelled"
             ;;
         *)
             echo "Invalid option."
@@ -77,22 +91,185 @@ check_requirements() {
     fi
 }
 
+# Website selection function
+select_website() {
+    if [ ! -f "config.json" ]; then
+        echo "Error: config.json not found. Using default configuration."
+        return
+    fi
+    
+    echo ""
+    echo "Available Websites:"
+    echo "=================="
+    
+    # Show website options using Python
+    python3 -c "
+import json
+try:
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+    websites = list(config.get('websites', {}).keys())
+    for i, website in enumerate(websites, 1):
+        site_config = config['websites'][website]
+        print(f'{i}. {website}')
+        print(f'   URL: {site_config.get(\"SITE_URL\", \"Unknown\")}')
+        print(f'   Domain: {site_config.get(\"DOMAIN\", \"Unknown\")}')
+        print()
+except Exception as e:
+    print('Error reading config.json:', e)
+    exit(1)
+"
+    
+    echo "0. Use default website"
+    echo ""
+    
+    # Get website names for selection
+    websites=($(python3 -c "
+import json
+try:
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+    websites = list(config.get('websites', {}).keys())
+    print(' '.join(websites))
+except:
+    pass
+"))
+    
+    if [ ${#websites[@]} -eq 0 ]; then
+        echo "Error: No websites found in config.json"
+        return
+    fi
+    
+    while true; do
+        read -p "Select website [0-${#websites[@]}]: " choice
+        
+        if [[ "$choice" == "0" ]]; then
+            SELECTED_WEBSITE=""
+            echo "Selected: Using default website"
+            break
+        elif [[ "$choice" =~ ^[1-9][0-9]*$ ]] && [ "$choice" -le "${#websites[@]}" ]; then
+            SELECTED_WEBSITE="${websites[$((choice-1))]}"
+            echo "Selected website: $SELECTED_WEBSITE"
+            break
+        else
+            echo "Invalid choice. Please select 0-${#websites[@]}"
+        fi
+    done
+}
+
 # Show menu
 show_menu() {
     clear
     echo "WooCommerce Data Import Tools"
     echo "============================="
     echo "1. Product Titles - Choose Python or Node.js"
-    echo "2. Product Data - Fetch complete product information"
-    echo "3. Orders (API) - Fetch orders via WooCommerce API"
-    echo "4. Orders (DB) - Fetch orders from database"
-    echo "5. Activity Monitor - Monitor WordPress activities"
-    echo "6. Install Dependencies - Install required packages"
-    echo "7. Config Test - Test configuration settings"
-    echo "8. Cleanup - Clean environment and data files"
-    echo "9. Generate Project Report"
+    echo "2. Product Data - Choose Python or Node.js"
+    echo "3. Orders - Choose API or Database"
+    echo "4. Activity Monitor - Monitor WordPress activities"
+    echo "5. Install Dependencies - Install required packages"
+    echo "6. Config Test - Test configuration settings"
+    echo "7. Cleanup - Clean environment and data files"
+    echo "8. Generate Project Report"
     echo "0. Exit"
     echo ""
+}
+
+# Product data submenu
+product_data_menu() {
+    echo "Product Data Import"
+    echo "=================="
+    echo "1. Python implementation"
+    echo "2. Node.js implementation"
+    echo "3. Reset/Clean product data"
+    echo "4. Back to main menu"
+    read -p "Select option [1-4]: " pd_choice
+    
+    case $pd_choice in
+        1)
+            select_website
+            echo "Running Product Data Importer (Python)..."
+            if [ -n "$SELECTED_WEBSITE" ]; then
+                python3 fetch_product_data_main_generic.py --website "$SELECTED_WEBSITE"
+            else
+                python3 fetch_product_data_main.py
+            fi
+            ;;
+        2)
+            if check_nodejs; then
+                setup_nodejs_deps
+                select_website
+                echo "Running Product Data Importer (Node.js)..."
+                if [ -f "config.json" ] && grep -q '"websites"' config.json && grep -q '"default_website"' config.json; then
+                    if [ -n "$SELECTED_WEBSITE" ]; then
+                        node fetch_product_data_main_enhanced.js --website "$SELECTED_WEBSITE"
+                    else
+                        node fetch_product_data_main_enhanced.js
+                    fi
+                else
+                    echo "Error: Invalid config.json structure"
+                    echo "Please ensure config.json has websites and default_website defined"
+                fi
+            else
+                echo "Node.js not available. Please install Node.js or use Python option."
+            fi
+            ;;
+        3)
+            echo "Resetting product data..."
+            python3 -c "from fetch_product_data_reset import reset_script; reset_script()"
+            ;;
+        4)
+            return
+            ;;
+        *)
+            echo "Invalid option."
+            ;;
+    esac
+}
+
+# Orders submenu
+orders_menu() {
+    echo "Orders Import"
+    echo "============="
+    echo "1. API - Fetch orders via WooCommerce API"
+    echo "2. Database - Fetch orders from database"
+    echo "3. Reset/Clean order data"
+    echo "4. Back to main menu"
+    read -p "Select option [1-4]: " order_choice
+    
+    case $order_choice in
+        1)
+            echo "Running Order Data Importer (API)..."
+            python3 fetch_orders_api_generic.py --interactive
+            ;;
+        2)
+            echo "Running Order Data Importer (Database)..."
+            # Setup virtual environment if needed
+            if [ ! -d "venv" ]; then
+                python3 -m venv venv
+                source venv/bin/activate
+                pip install -r requirements.txt
+            elif [ -z "$VIRTUAL_ENV" ]; then
+                source venv/bin/activate
+            fi
+            
+            # Ensure mysql-connector is installed
+            if ! python3 -c "import mysql.connector" &>/dev/null; then
+                pip install mysql-connector-python
+            fi
+            
+            python3 fetch_orders_database.py
+            ;;
+        3)
+            echo "Resetting order data..."
+            python3 -c "from fetch_orders_reset import reset_script; reset_script()"
+            ;;
+        4)
+            return
+            ;;
+        *)
+            echo "Invalid option."
+            ;;
+    esac
 }
 
 # Product titles submenu
@@ -107,17 +284,27 @@ product_titles_menu() {
     
     case $pt_choice in
         1)
+            select_website
             echo "Running Product Titles Importer (Python)..."
-            python3 fetch_product_titles_main.py
+            if [ -n "$SELECTED_WEBSITE" ]; then
+                python3 fetch_product_titles_main_generic.py --website "$SELECTED_WEBSITE"
+            else
+                python3 fetch_product_titles_main.py
+            fi
             ;;
         2)
             if check_nodejs; then
                 setup_nodejs_deps
+                select_website
                 echo "Running Product Titles Importer (Node.js)..."
                 if [ -f "config.json" ] && grep -q '"websites"' config.json && grep -q '"default_website"' config.json; then
-                    node fetch_product_titles_main.js
+                    if [ -n "$SELECTED_WEBSITE" ]; then
+                        node fetch_product_titles_main_enhanced.js --website "$SELECTED_WEBSITE"
+                    else
+                        node fetch_product_titles_main.js
+                    fi
                 else
-                    echo "❌ Error: Invalid config.json structure"
+                    echo "Error: Invalid config.json structure"
                     echo "Please ensure config.json has websites and default_website defined"
                 fi
             else
@@ -144,7 +331,7 @@ main() {
     
     while true; do
         show_menu
-        read -p "Select option [0-9]: " choice
+        read -p "Select option [0-8]: " choice
         
         case $choice in
             1)
@@ -152,35 +339,14 @@ main() {
                 read -p "Press Enter to continue..."
                 ;;
             2)
-                echo "Running Product Data Importer..."
-                python3 fetch_product_data_main.py
+                product_data_menu
                 read -p "Press Enter to continue..."
                 ;;
             3)
-                echo "Running Order Data Importer (API)..."
-                python3 fetch_orders_api.py --interactive
+                orders_menu
                 read -p "Press Enter to continue..."
                 ;;
             4)
-                echo "Running Order Data Importer (Database)..."
-                # Setup virtual environment if needed
-                if [ ! -d "venv" ]; then
-                    python3 -m venv venv
-                    source venv/bin/activate
-                    pip install -r requirements.txt
-                elif [ -z "$VIRTUAL_ENV" ]; then
-                    source venv/bin/activate
-                fi
-                
-                # Ensure mysql-connector is installed
-                if ! python3 -c "import mysql.connector" &>/dev/null; then
-                    pip install mysql-connector-python
-                fi
-                
-                python3 fetch_orders_database.py
-                read -p "Press Enter to continue..."
-                ;;
-            5)
                 echo "Running Activity Monitor..."
                 echo "1. Domain 1"
                 echo "2. Domain 2"
@@ -192,21 +358,12 @@ main() {
                 esac
                 read -p "Press Enter to continue..."
                 ;;
-            6)
+            5)
                 echo "Installing dependencies..."
                 python3 -m pip install -r requirements.txt
                 read -p "Press Enter to continue..."
                 ;;
-            7)
-                echo "Installing dependencies in virtual environment..."
-                python3 -m venv venv
-                source venv/bin/activate
-                pip install -r requirements.txt
-                echo "✅ Dependencies installed in virtual environment"
-                deactivate
-                read -p "Press Enter to continue..."
-                ;;
-            8)
+            6)
                 echo "Configuration Test..."
                 python3 -c "
 from dotenv import load_dotenv
@@ -219,11 +376,11 @@ print(f'Database: {os.getenv(\"DATABASE_NAME_1\", \"Not configured\")}')
 "
                 read -p "Press Enter to continue..."
                 ;;
-            9)
+            7)
                 cleanup_env_files
                 read -p "Press Enter to continue..."
                 ;;
-            10)
+            8)
                 echo "Generating project report..."
                 ./generate_project_report.sh
                 read -p "Press Enter to continue..."
@@ -233,7 +390,7 @@ print(f'Database: {os.getenv(\"DATABASE_NAME_1\", \"Not configured\")}')
                 exit 0
                 ;;
             *)
-                echo "Invalid option. Please select 0-9."
+                echo "Invalid option. Please select 0-8."
                 read -p "Press Enter to continue..."
                 ;;
         esac

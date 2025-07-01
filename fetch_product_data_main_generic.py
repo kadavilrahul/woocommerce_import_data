@@ -5,8 +5,6 @@ import csv
 import os
 import sys
 import argparse
-from fetch_product_titles_reset import reset_script
-
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -54,10 +52,9 @@ def load_configuration(website_name=None):
 
 def get_file_paths(website_name="default"):
     """Get file paths for CSV and page tracking based on website name"""
-    csv_file = f"data/product_titles_{website_name}.csv"
-    page_file = f"data/product_titles_page_{website_name}.txt"
+    csv_file = f"data/product_data_{website_name}.csv"
+    page_file = f"data/product_data_page_{website_name}.txt"
     return csv_file, page_file
-
 
 def get_current_page(website_name="default"):
     """Retrieve the current page from the property file."""
@@ -71,7 +68,6 @@ def get_current_page(website_name="default"):
         print("⚠️ Warning: Invalid page number in current_page.txt. Starting from page 1.")
         return 1
 
-
 def save_current_page(page, website_name="default"):
     """Save the current page number to the property file."""
     _, page_file = get_file_paths(website_name)
@@ -81,9 +77,25 @@ def save_current_page(page, website_name="default"):
     except IOError as e:
         print(f"⚠️ Warning: Could not save current page: {e}")
 
+def extract_product_data(product):
+    """Extract required data fields from a product."""
+    try:
+        # Get the first category name if available
+        category = product["categories"][0]["name"] if product["categories"] else ""
+        
+        return {
+            "title": product["name"],
+            "price": product["price"],
+            "product_link": product["permalink"],
+            "category": category,
+            "image_url": product["images"][0]["src"] if product["images"] else ""
+        }
+    except (KeyError, IndexError) as e:
+        print(f"⚠️ Warning: Could not extract all fields from product: {e}")
+        return None
 
-def fetch_titles(page, config):
-    """Fetch product titles from WooCommerce API."""
+def fetch_products(page, config):
+    """Fetch product data from WooCommerce API."""
     api_url = f"{config['SITE_URL']}/wp-json/wc/v3/products"
     params = {
         'page': page,
@@ -96,7 +108,14 @@ def fetch_titles(page, config):
         response = requests.get(api_url, params=params)
         response.raise_for_status()
         products = response.json()
-        return [product["name"] for product in products], len(products) == 50
+        
+        product_data = []
+        for product in products:
+            data = extract_product_data(product)
+            if data:
+                product_data.append(data)
+        
+        return product_data, len(products) == 50
     except requests.RequestException as e:
         print(f"❌ Error fetching data from API: {e}")
         return [], False
@@ -104,32 +123,36 @@ def fetch_titles(page, config):
         print(f"❌ Error processing API response: {e}")
         return [], False
 
-
-def write_titles_to_csv(titles, website_name="default"):
-    """Write titles to a CSV file."""
+def write_products_to_csv(products, website_name="default"):
+    """Write product data to a CSV file."""
     csv_file, _ = get_file_paths(website_name)
     try:
         # Ensure data directory exists
         os.makedirs(os.path.dirname(csv_file), exist_ok=True)
-        # Open in append mode to add new titles
+        # Open in append mode to add new products
         mode = 'a' if get_current_page(website_name) > 1 else 'w'
         with open(csv_file, mode, newline='', encoding='utf-8') as f:
             writer = csv.writer(f, quoting=csv.QUOTE_ALL)
             # Write header if it's a new file
             if mode == 'w':
-                writer.writerow(['Product Title'])
-            # Write titles
-            for title in titles:
-                writer.writerow([title])
-        print(f"✓ Successfully wrote {len(titles)} titles to {csv_file}")
+                writer.writerow(['title', 'price', 'product_link', 'category', 'image_url'])
+            # Write product data
+            for product in products:
+                writer.writerow([
+                    product["title"],
+                    product["price"],
+                    product["product_link"],
+                    product["category"],
+                    product["image_url"]
+                ])
+        print(f"✓ Successfully wrote {len(products)} products to {csv_file}")
     except Exception as e:
         print(f"❌ Error writing to CSV file: {e}")
 
-
-def fetch_woocommerce_product_titles(config, website_name="default"):
-    """Main function to fetch product titles and save them to CSV."""
+def fetch_woocommerce_products(config, website_name="default"):
+    """Main function to fetch product data and save them to CSV."""
     csv_file, _ = get_file_paths(website_name)
-    print(f"\n🔄 Starting to fetch product titles from {config['SITE_URL']}")
+    print(f"\n🔄 Starting to fetch product data from {config['SITE_URL']}")
     if website_name != "default":
         print(f"📊 Website: {website_name}")
     
@@ -138,17 +161,17 @@ def fetch_woocommerce_product_titles(config, website_name="default"):
 
     while True:
         print(f"📥 Fetching page {current_page}...", end=' ', flush=True)
-        titles, has_more = fetch_titles(current_page, config)
+        products, has_more = fetch_products(current_page, config)
         
-        if not titles:
+        if not products:
             if current_page == 1:
                 print("❌ No products found or error occurred.")
                 break
             print("✓ No more products to fetch.")
             break
 
-        total_products += len(titles)
-        write_titles_to_csv(titles, website_name)
+        total_products += len(products)
+        write_products_to_csv(products, website_name)
         save_current_page(current_page, website_name)
 
         if not has_more:
@@ -161,17 +184,16 @@ def fetch_woocommerce_product_titles(config, website_name="default"):
     print(f"\n✅ Finished! Total products processed: {total_products}")
     print(f"📁 Results saved to {csv_file}")
 
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Fetch WooCommerce product titles with multi-website support')
+    parser = argparse.ArgumentParser(description='Fetch WooCommerce product data with multi-website support')
     parser.add_argument('--website', type=str, help='Website name (from config.json)')
     
     args = parser.parse_args()
     
-    print('🚀 Starting product title import...\n')
+    print('🚀 Starting product data import...\n')
     try:
         config = load_configuration(args.website)
-        fetch_woocommerce_product_titles(config, args.website or "default")
+        fetch_woocommerce_products(config, args.website or "default")
     except KeyboardInterrupt:
         print("\n⚠️ Process interrupted by user. Progress has been saved.")
     except Exception as e:
