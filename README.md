@@ -15,6 +15,9 @@ cd woocommerce_import_data
 ```bash
 bash main.sh
 ```
+```bash
+bash fetch_products_full.sh
+```
 
 *Dependencies are installed automatically via the menu*
 
@@ -56,8 +59,9 @@ Data saved to `data/` directory:
 
 ```
 main.sh                                  # Interactive menu system
+fetch_products_full.sh                   # Complete product data export 
 fetch_product_titles_main_generic.py     # Product titles (Python)
-fetch_product_data_main_generic.py       # Product data (Python)  
+fetch_product_data_main_generic.py       # Product data (Python)
 fetch_product_titles_main_enhanced.js    # Product titles (Node.js)
 fetch_product_data_main_enhanced.js      # Product data (Node.js)
 fetch_orders_api_generic.py              # Orders via WooCommerce API
@@ -73,9 +77,12 @@ data/                                     # Output directory
 python3 fetch_product_titles_main_generic.py --website mystore
 python3 fetch_orders_api_generic.py --interactive
 
-# Node.js with multi-website support  
+# Node.js with multi-website support
 node fetch_product_titles_main_enhanced.js --website mystore
 node fetch_product_data_main_enhanced.js --website mystore
+
+# Bash script for complete product export
+bash fetch_products_full.sh
 ```
 
 ## 📋 Requirements
