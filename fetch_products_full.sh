@@ -74,12 +74,14 @@ mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" -N -e "
         (SELECT meta_value FROM ${TABLE_PREFIX}postmeta WHERE post_id = p.ID AND meta_key = '_price'),
         '0'
       ) AS price,
-      (
-        SELECT GROUP_CONCAT(t.name SEPARATOR ', ')
-        FROM ${TABLE_PREFIX}term_relationships tr
-        JOIN ${TABLE_PREFIX}term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-        JOIN ${TABLE_PREFIX}terms t ON tt.term_id = t.term_id
-        WHERE tr.object_id = p.ID AND tt.taxonomy = 'product_cat'
+      COALESCE(
+        (SELECT GROUP_CONCAT(t.name SEPARATOR ', ')
+         FROM ${TABLE_PREFIX}term_relationships tr
+         JOIN ${TABLE_PREFIX}term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+         JOIN ${TABLE_PREFIX}terms t ON tt.term_id = t.term_id
+         WHERE tr.object_id = p.ID AND tt.taxonomy = 'product_cat'
+         GROUP BY tr.object_id),
+        'Uncategorized'
       ) AS category,
       p.post_excerpt AS short_description,
       p.post_content AS description
